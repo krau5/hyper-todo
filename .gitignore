@@ -1,0 +1,13 @@
+# IDE Settings
+.vscode/
+.idea/
+.zed/
+
+# Logs
+logs/
+*.log
+
+# Miscellaneous
+.env
+.DS_Store
+
