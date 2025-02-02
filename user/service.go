@@ -7,6 +7,7 @@ import (
 	"github.com/krau5/hyper-todo/domain"
 )
 
+//go:generate mockery --name UsersRepository
 type UsersRepository interface {
 	Create(ctx context.Context, name, email, password string) error
 	FindByEmail(string) (domain.User, error)
