@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/krau5/hyper-todo/domain"
+	"github.com/krau5/hyper-todo/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -23,8 +24,13 @@ func NewUserRepository(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, name, email, password string) error {
+	hash, err := utils.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
 	user := UserModel{
-		User: domain.User{Name: name, Email: email, Password: password},
+		User: domain.User{Name: name, Email: email, Password: hash},
 	}
 
 	result := r.db.Create(&user)
