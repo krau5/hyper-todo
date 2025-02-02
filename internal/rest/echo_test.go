@@ -15,7 +15,9 @@ type Response struct {
 }
 
 func TestPingHandler(t *testing.T) {
-	r := gin.Default()
+	gin.SetMode(gin.TestMode)
+
+	r := gin.New()
 	NewPingHandler(r)
 
 	w := httptest.NewRecorder()
