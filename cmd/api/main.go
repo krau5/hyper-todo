@@ -32,7 +32,7 @@ func main() {
 	usersService := user.NewService(usersRepo)
 
 	rest.NewPingHandler(r)
-	rest.NewUserHandler(r, usersService)
+	rest.NewAuthHandler(r, usersService)
 
 	r.Run()
 }

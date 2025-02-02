@@ -2,18 +2,17 @@ package rest
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/krau5/hyper-todo/internal/utils"
 )
 
 type UsersService interface {
 	Create(context context.Context, name, email, password string) error
 }
 
-type UsersHandler struct {
+type AuthHandler struct {
 	usersService UsersService
 }
 
@@ -23,13 +22,13 @@ type CreateUserBody struct {
 	Password string `json:"password"`
 }
 
-func NewUserHandler(g *gin.Engine, usersService UsersService) {
-	h := &UsersHandler{usersService: usersService}
+func NewAuthHandler(g *gin.Engine, usersService UsersService) {
+	h := &AuthHandler{usersService: usersService}
 
 	g.POST("/register", h.handleCreate)
 }
 
-func (h *UsersHandler) handleCreate(c *gin.Context) {
+func (h *AuthHandler) handleCreate(c *gin.Context) {
 	var data CreateUserBody
 
 	if err := c.BindJSON(&data); err != nil {
@@ -44,7 +43,7 @@ func (h *UsersHandler) handleCreate(c *gin.Context) {
 		data.Password,
 	)
 
-	if isDublicatedKeyErr(err) {
+	if utils.IsErrDuplicatedKey(err) {
 		c.JSON(http.StatusConflict, gin.H{"error": "user with this email already exists"})
 		return
 	}
@@ -55,11 +54,4 @@ func (h *UsersHandler) handleCreate(c *gin.Context) {
 	}
 
 	c.Status(http.StatusCreated)
-}
-
-func isDublicatedKeyErr(err error) bool {
-	var perr *pgconn.PgError
-	errors.As(err, &perr)
-
-	return perr.Code == "23505"
 }
