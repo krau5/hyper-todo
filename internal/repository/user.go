@@ -33,10 +33,17 @@ func (r *Repository) Create(ctx context.Context, name, email, password string) e
 		User: domain.User{Name: name, Email: email, Password: hash},
 	}
 
-	result := r.db.Create(&user)
+	result := r.db.WithContext(ctx).Create(&user)
 	return result.Error
 }
 
-func (r *Repository) FindByEmail(email string) (domain.User, error) {
-	return domain.User{}, nil
+func (r *Repository) GetByEmail(ctx context.Context, email string) (domain.User, error) {
+	user := UserModel{}
+
+	result := r.db.WithContext(ctx).Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return domain.User{}, result.Error
+	}
+
+	return user.User, nil
 }

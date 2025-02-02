@@ -32,27 +32,27 @@ func (_m *UsersRepository) Create(ctx context.Context, name string, email string
 	return r0
 }
 
-// FindByEmail provides a mock function with given fields: _a0
-func (_m *UsersRepository) FindByEmail(_a0 string) (domain.User, error) {
-	ret := _m.Called(_a0)
+// GetByEmail provides a mock function with given fields: _a0, _a1
+func (_m *UsersRepository) GetByEmail(_a0 context.Context, _a1 string) (domain.User, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindByEmail")
+		panic("no return value specified for GetByEmail")
 	}
 
 	var r0 domain.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (domain.User, error)); ok {
-		return rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (domain.User, error)); ok {
+		return rf(_a0, _a1)
 	}
-	if rf, ok := ret.Get(0).(func(string) domain.User); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, string) domain.User); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Get(0).(domain.User)
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}

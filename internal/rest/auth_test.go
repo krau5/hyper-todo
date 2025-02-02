@@ -31,7 +31,7 @@ func TestRegisterHandler(t *testing.T) {
 	r := gin.New()
 	NewAuthHandler(r, usersService)
 
-	body := CreateUserBody{
+	body := RegisterBody{
 		Name:     name,
 		Email:    email,
 		Password: password,
@@ -61,7 +61,7 @@ func TestRegisterError(t *testing.T) {
 	r := gin.New()
 	NewAuthHandler(r, usersService)
 
-	body := CreateUserBody{
+	body := RegisterBody{
 		Name:     name,
 		Email:    email,
 		Password: password,
