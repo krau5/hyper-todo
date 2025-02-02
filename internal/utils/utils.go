@@ -7,11 +7,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/krau5/hyper-todo/config"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// TODO move secret key to config
-var secretKey = []byte("secret_key")
 
 func IsErrDuplicatedKey(err error) bool {
 	if err == nil {
@@ -45,7 +43,7 @@ func CreateJwt(email string) (string, error) {
 		"iat": time.Now().Unix(),
 	})
 
-	tokenString, err := claims.SignedString(secretKey)
+	tokenString, err := claims.SignedString(config.Envs.JwtSecretKey)
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +53,7 @@ func CreateJwt(email string) (string, error) {
 
 func VerifyJwt(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return config.Envs.JwtSecretKey, nil
 	})
 
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/krau5/hyper-todo/config"
 	"github.com/krau5/hyper-todo/domain"
 	"github.com/krau5/hyper-todo/internal/utils"
 	"gorm.io/gorm"
@@ -98,7 +99,6 @@ func (h *AuthHandler) handleLogin(c *gin.Context) {
 		return
 	}
 
-	// TODO add cookie domain to config
-	c.SetCookie("token", token, 3600, "/", "localhost", false, true)
+	c.SetCookie("token", token, 3600, "/", config.Envs.CookieDomain, false, true)
 	c.Status(http.StatusOK)
 }
