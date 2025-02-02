@@ -8,6 +8,7 @@ import (
 	"github.com/krau5/hyper-todo/internal/utils"
 )
 
+//go:generate mockery --name UsersService
 type UsersService interface {
 	Create(context context.Context, name, email, password string) error
 }
@@ -25,10 +26,10 @@ type CreateUserBody struct {
 func NewAuthHandler(g *gin.Engine, usersService UsersService) {
 	h := &AuthHandler{usersService: usersService}
 
-	g.POST("/register", h.handleCreate)
+	g.POST("/register", h.handleRegister)
 }
 
-func (h *AuthHandler) handleCreate(c *gin.Context) {
+func (h *AuthHandler) handleRegister(c *gin.Context) {
 	var data CreateUserBody
 
 	if err := c.BindJSON(&data); err != nil {

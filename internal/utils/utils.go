@@ -7,6 +7,10 @@ import (
 )
 
 func IsErrDuplicatedKey(err error) bool {
+	if err == nil {
+		return false
+	}
+
 	var perr *pgconn.PgError
 	errors.As(err, &perr)
 

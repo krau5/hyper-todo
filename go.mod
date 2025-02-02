@@ -4,6 +4,8 @@ go 1.23.4
 
 require github.com/stretchr/testify v1.10.0
 
+require github.com/stretchr/objx v0.5.2 // indirect
+
 require (
 	github.com/bytedance/sonic v1.12.8 // indirect
 	github.com/bytedance/sonic/loader v0.2.3 // indirect
