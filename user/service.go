@@ -10,7 +10,7 @@ import (
 //go:generate mockery --name UsersRepository
 type UsersRepository interface {
 	Create(ctx context.Context, name, email, password string) error
-	FindByEmail(string) (domain.User, error)
+	GetByEmail(context.Context, string) (domain.User, error)
 }
 
 type Service struct {
@@ -35,4 +35,17 @@ func (s *Service) Create(ctx context.Context, name, email, password string) erro
 	}
 
 	return s.usersRepo.Create(ctx, name, email, password)
+}
+
+func (s *Service) GetByEmail(ctx context.Context, email string) (domain.User, error) {
+	if len(email) == 0 {
+		return domain.User{}, fmt.Errorf("field email is missing or empty")
+	}
+
+	user, err := s.usersRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
 }

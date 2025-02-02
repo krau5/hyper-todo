@@ -8,6 +8,8 @@ import (
 )
 
 type Config struct {
+	CookieDomain     string
+	JwtSecretKey     string
 	PostgresUser     string
 	PostgresPassword string
 	PostgresDB       string
@@ -18,6 +20,8 @@ func loadConfig() *Config {
 	godotenv.Load()
 
 	return &Config{
+		CookieDomain:     getEnv("COOKIE_DOMAIN", "localhost"),
+		JwtSecretKey:     getEnv("JWT_SECRET_KEY", "secret"),
 		PostgresUser:     getEnv("POSTGRES_USER", "user"),
 		PostgresPassword: getEnv("POSTGRES_PASSWORD", "password"),
 		PostgresDB:       getEnv("POSTGRES_DB", "hypertodo"),
