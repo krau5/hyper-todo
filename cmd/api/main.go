@@ -19,12 +19,11 @@ func main() {
 		log.Fatal("Failed to connect to db:", err)
 	}
 
-	err = db.AutoMigrate(&repository.UserModel{})
+	err = db.AutoMigrate(&repository.UserModel{}, &repository.TaskModel{})
 	if err != nil {
 		log.Fatal("Failed to run migrations:", err)
-	} else {
-		log.Println("Migrations ran successfully")
 	}
+	log.Println("Migrations ran successfully")
 
 	r := gin.Default()
 

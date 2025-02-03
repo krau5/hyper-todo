@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"time"
 
 	"github.com/krau5/hyper-todo/domain"
@@ -20,23 +21,33 @@ func NewTasksRepository(db *gorm.DB) *tasksRepository {
 	return &tasksRepository{db: db}
 }
 
-func (r *tasksRepository) Create(name, description string, deadline time.Time, userId int64) (domain.Task, error) {
+func (r *tasksRepository) Create(ctx context.Context, name, description string, deadline time.Time, userId int64) (domain.Task, error) {
+	task := domain.Task{Name: name, Description: description, Deadline: deadline, UserId: userId}
+	val := TaskModel{
+		Task: task,
+	}
+
+	result := r.db.WithContext(ctx).Create(&val)
+	if result.Error != nil {
+		return domain.Task{}, result.Error
+	}
+
+	return task, nil
+}
+
+func (r *tasksRepository) GetById(ctx context.Context, id int64) (domain.Task, error) {
 	return domain.Task{}, nil
 }
 
-func (r *tasksRepository) GetById(id int64) (domain.Task, error) {
-	return domain.Task{}, nil
-}
-
-func (r *tasksRepository) GetByUser(userId int64) ([]domain.Task, error) {
+func (r *tasksRepository) GetByUser(ctx context.Context, userId int64) ([]domain.Task, error) {
 	return []domain.Task{}, nil
 }
 
-func (r *tasksRepository) UpdateById(id int64, data TaskUpdate) (domain.Task, error) {
+func (r *tasksRepository) UpdateById(ctx context.Context, id int64, data TaskUpdate) (domain.Task, error) {
 	return domain.Task{}, nil
 }
 
-func (r *tasksRepository) DeleteById(id int64) error {
+func (r *tasksRepository) DeleteById(ctx context.Context, id int64) error {
 	return nil
 }
 

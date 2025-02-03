@@ -11,6 +11,7 @@ import (
 type UsersRepository interface {
 	Create(ctx context.Context, name, email, password string) error
 	GetByEmail(context.Context, string) (domain.User, error)
+	GetById(context.Context, int64) (domain.User, error)
 }
 
 type Service struct {
