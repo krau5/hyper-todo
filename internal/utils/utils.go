@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -36,8 +37,9 @@ func VerifyPassword(password, hash string) bool {
 }
 
 func CreateJwt(userId int64) (string, error) {
+	sub := strconv.FormatInt(userId, 10)
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": userId,
+		"sub": sub,
 		"iss": "hyper-todo",
 		"exp": time.Now().Add(time.Hour).Unix(),
 		"iat": time.Now().Unix(),
@@ -53,7 +55,7 @@ func CreateJwt(userId int64) (string, error) {
 
 func VerifyJwt(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		return config.Envs.JwtSecretKey, nil
+		return []byte(config.Envs.JwtSecretKey), nil
 	})
 
 	if err != nil {
