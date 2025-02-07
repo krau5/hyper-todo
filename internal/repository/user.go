@@ -14,16 +14,16 @@ type UserModel struct {
 }
 
 // Repository implements UsersRepository interface
-type Repository struct {
+type usersRepository struct {
 	db *gorm.DB
 }
 
 // NewUserRepository returns the implementation of UsersRepository interface
-func NewUserRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+func NewUserRepository(db *gorm.DB) *usersRepository {
+	return &usersRepository{db: db}
 }
 
-func (r *Repository) Create(ctx context.Context, name, email, password string) error {
+func (r *usersRepository) Create(ctx context.Context, name, email, password string) error {
 	hash, err := utils.HashPassword(password)
 	if err != nil {
 		return err
@@ -37,10 +37,21 @@ func (r *Repository) Create(ctx context.Context, name, email, password string) e
 	return result.Error
 }
 
-func (r *Repository) GetByEmail(ctx context.Context, email string) (domain.User, error) {
+func (r *usersRepository) GetByEmail(ctx context.Context, email string) (domain.User, error) {
 	user := UserModel{}
 
 	result := r.db.WithContext(ctx).Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return domain.User{}, result.Error
+	}
+
+	return user.User, nil
+}
+
+func (r *usersRepository) GetById(ctx context.Context, id int64) (domain.User, error) {
+	user := UserModel{}
+
+	result := r.db.WithContext(ctx).First(&user, id)
 	if result.Error != nil {
 		return domain.User{}, result.Error
 	}

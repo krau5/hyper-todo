@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/krau5/hyper-todo/internal/utils"
@@ -27,6 +28,13 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	c.Set("user-email", sub)
+	userId, err := strconv.ParseInt(sub, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.Set("user-id", userId)
 	c.Next()
 }
