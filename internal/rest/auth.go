@@ -93,7 +93,7 @@ func (h *AuthHandler) handleLogin(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.CreateJwt(user.Email)
+	token, err := utils.CreateJwt(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

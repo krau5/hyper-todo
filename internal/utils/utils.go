@@ -35,9 +35,9 @@ func VerifyPassword(password, hash string) bool {
 	return err == nil
 }
 
-func CreateJwt(email string) (string, error) {
+func CreateJwt(userId int64) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": email,
+		"sub": userId,
 		"iss": "hyper-todo",
 		"exp": time.Now().Add(time.Hour).Unix(),
 		"iat": time.Now().Unix(),
