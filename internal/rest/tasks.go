@@ -10,6 +10,7 @@ import (
 	"github.com/krau5/hyper-todo/internal/rest/middleware"
 )
 
+//go:generate mockery --name TasksService
 type TasksService interface {
 	Create(ctx context.Context, name, description string, deadline time.Time, userId int64) (domain.Task, error)
 	GetById(context.Context, int64) (domain.Task, error)
