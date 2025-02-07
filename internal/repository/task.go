@@ -43,17 +43,10 @@ func (r *tasksRepository) GetByUser(ctx context.Context, userId int64) ([]domain
 	return []domain.Task{}, nil
 }
 
-func (r *tasksRepository) UpdateById(ctx context.Context, id int64, data TaskUpdate) (domain.Task, error) {
+func (r *tasksRepository) UpdateById(ctx context.Context, id int64, data *domain.Task) (domain.Task, error) {
 	return domain.Task{}, nil
 }
 
 func (r *tasksRepository) DeleteById(ctx context.Context, id int64) error {
 	return nil
-}
-
-type TaskUpdate struct {
-	Name        *string
-	Description *string
-	Deadline    *time.Time
-	Completed   *bool
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/krau5/hyper-todo/config"
 	"github.com/krau5/hyper-todo/internal/repository"
 	"github.com/krau5/hyper-todo/internal/rest"
+	"github.com/krau5/hyper-todo/task"
 	"github.com/krau5/hyper-todo/user"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -30,8 +31,12 @@ func main() {
 	usersRepo := repository.NewUserRepository(db)
 	usersService := user.NewService(usersRepo)
 
+	tasksRepo := repository.NewTasksRepository(db)
+	tasksService := task.NewService(tasksRepo, usersRepo)
+
 	rest.NewPingHandler(r)
 	rest.NewAuthHandler(r, usersService)
+	rest.NewTasksHandler(r, tasksService)
 
 	r.Run()
 }
