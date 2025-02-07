@@ -43,7 +43,7 @@ func CreateJwt(userId int64) (string, error) {
 		"iat": time.Now().Unix(),
 	})
 
-	tokenString, err := claims.SignedString(config.Envs.JwtSecretKey)
+	tokenString, err := claims.SignedString([]byte(config.Envs.JwtSecretKey))
 	if err != nil {
 		return "", err
 	}
