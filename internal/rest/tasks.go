@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/krau5/hyper-todo/domain"
+	"github.com/krau5/hyper-todo/internal/rest/errors"
 	"github.com/krau5/hyper-todo/internal/rest/middleware"
 )
 
@@ -30,6 +31,11 @@ type CreateTaskBody struct {
 	UserId      int64  `json:"userId"`
 }
 
+var (
+	ErrInvalidDeadline    = errors.NewResponseError(http.StatusBadRequest, "failed to parse deadline")
+	ErrFailedToCreateTask = errors.NewResponseError(http.StatusBadRequest, "failed to create task")
+)
+
 func NewTasksHandler(r *gin.Engine, tasksService TasksService) {
 	h := &TasksHandler{
 		tasksService: tasksService,
@@ -42,13 +48,13 @@ func (h *TasksHandler) handleCreateTask(c *gin.Context) {
 	var data CreateTaskBody
 
 	if err := c.BindJSON(&data); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(errors.ErrInvalidBody.Status, errors.ErrInvalidBody)
 		return
 	}
 
 	deadline, err := time.Parse(time.RFC3339, data.Deadline)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(ErrInvalidDeadline.Status, ErrInvalidDeadline)
 		return
 	}
 
@@ -60,7 +66,7 @@ func (h *TasksHandler) handleCreateTask(c *gin.Context) {
 		data.UserId,
 	)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(ErrFailedToCreateTask.Status, ErrFailedToCreateTask)
 		return
 	}
 

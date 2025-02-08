@@ -1,6 +1,9 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
 
 type ResponseError struct {
 	Status  int    `json:"status"`
@@ -14,3 +17,7 @@ func (e *ResponseError) Error() string {
 func NewResponseError(status int, message string) *ResponseError {
 	return &ResponseError{Status: status, Message: message}
 }
+
+var (
+	ErrInvalidBody = NewResponseError(http.StatusBadRequest, "invalid request body")
+)

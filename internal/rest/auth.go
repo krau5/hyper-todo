@@ -35,7 +35,6 @@ type LoginBody struct {
 }
 
 var (
-	ErrInvalidBody          = appErrors.NewResponseError(http.StatusBadRequest, "invalid request body")
 	ErrUserExists           = appErrors.NewResponseError(http.StatusConflict, "user with this email already exists")
 	ErrUserNotFound         = appErrors.NewResponseError(http.StatusNotFound, "user with this email does not exist")
 	ErrInvalidCredentials   = appErrors.NewResponseError(http.StatusBadRequest, "invalid email or password")
@@ -55,7 +54,7 @@ func (h *AuthHandler) handleRegister(c *gin.Context) {
 	var data RegisterBody
 
 	if err := c.ShouldBindJSON(&data); err != nil {
-		c.JSON(ErrInvalidBody.Status, ErrInvalidBody)
+		c.JSON(appErrors.ErrInvalidBody.Status, appErrors.ErrInvalidBody)
 		return
 	}
 
@@ -83,7 +82,7 @@ func (h *AuthHandler) handleLogin(c *gin.Context) {
 	var data LoginBody
 
 	if err := c.ShouldBindJSON(&data); err != nil {
-		c.JSON(ErrInvalidBody.Status, ErrInvalidBody)
+		c.JSON(appErrors.ErrInvalidBody.Status, appErrors.ErrInvalidBody)
 		return
 	}
 
