@@ -5,33 +5,45 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/krau5/hyper-todo/internal/rest/errors"
 	"github.com/krau5/hyper-todo/internal/utils"
 )
 
-func AuthMiddleware(c *gin.Context) {
+var (
+	errMissingToken   = errors.NewResponseError(http.StatusUnauthorized, "missing or invalid token")
+	errInvalidToken   = errors.NewResponseError(http.StatusUnauthorized, "invalid token")
+	errExtractSubject = errors.NewResponseError(http.StatusBadRequest, "failed to extract subject from token")
+	errParseUserID    = errors.NewResponseError(http.StatusBadRequest, "failed to parse user ID from token")
+)
+
+func validateToken(c *gin.Context) (int64, *errors.ResponseError) {
 	tokenString, err := c.Cookie("token")
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
+		return 0, errMissingToken
 	}
 
 	token, err := utils.VerifyJwt(tokenString)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
+		return 0, errInvalidToken
 	}
 
 	sub, err := token.Claims.GetSubject()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		c.Abort()
-		return
+		return 0, errExtractSubject
 	}
 
 	userId, err := strconv.ParseInt(sub, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		c.Abort()
+		return 0, errParseUserID
+	}
+
+	return userId, nil
+}
+
+func AuthMiddleware(c *gin.Context) {
+	userId, err := validateToken(c)
+	if err != nil {
+		c.AbortWithError(err.Status, err)
 		return
 	}
 

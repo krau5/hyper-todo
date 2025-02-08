@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/krau5/hyper-todo/config"
 	"github.com/krau5/hyper-todo/domain"
+	appErrors "github.com/krau5/hyper-todo/internal/rest/errors"
 	"github.com/krau5/hyper-todo/internal/utils"
 	"gorm.io/gorm"
 )
@@ -23,15 +24,24 @@ type AuthHandler struct {
 }
 
 type RegisterBody struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string `json:"name" binding:"required,min=4"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
 }
 
 type LoginBody struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
 }
+
+var (
+	ErrUserExists           = appErrors.NewResponseError(http.StatusConflict, "user with this email already exists")
+	ErrUserNotFound         = appErrors.NewResponseError(http.StatusNotFound, "user with this email does not exist")
+	ErrInvalidCredentials   = appErrors.NewResponseError(http.StatusBadRequest, "invalid email or password")
+	ErrFailedToRetrieveUser = appErrors.NewResponseError(http.StatusInternalServerError, "failed to retrieve user")
+	ErrFailedToCreateUser   = appErrors.NewResponseError(http.StatusInternalServerError, "failed to create user")
+	ErrFailedToCreateToken  = appErrors.NewResponseError(http.StatusInternalServerError, "failed to create jwt token")
+)
 
 func NewAuthHandler(g *gin.Engine, usersService UsersService) {
 	h := &AuthHandler{usersService: usersService}
@@ -43,8 +53,8 @@ func NewAuthHandler(g *gin.Engine, usersService UsersService) {
 func (h *AuthHandler) handleRegister(c *gin.Context) {
 	var data RegisterBody
 
-	if err := c.BindJSON(&data); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(appErrors.ErrInvalidBody.Status, appErrors.ErrInvalidBody)
 		return
 	}
 
@@ -56,12 +66,12 @@ func (h *AuthHandler) handleRegister(c *gin.Context) {
 	)
 
 	if utils.IsErrDuplicatedKey(err) {
-		c.JSON(http.StatusConflict, gin.H{"error": "user with this email already exists"})
+		c.JSON(ErrUserExists.Status, ErrUserExists)
 		return
 	}
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(ErrFailedToCreateUser.Status, ErrFailedToCreateUser)
 		return
 	}
 
@@ -71,31 +81,31 @@ func (h *AuthHandler) handleRegister(c *gin.Context) {
 func (h *AuthHandler) handleLogin(c *gin.Context) {
 	var data LoginBody
 
-	if err := c.BindJSON(&data); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(appErrors.ErrInvalidBody.Status, appErrors.ErrInvalidBody)
 		return
 	}
 
 	user, err := h.usersService.GetByEmail(c.Request.Context(), data.Email)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user with this email does not exist"})
+		c.JSON(ErrUserNotFound.Status, ErrUserNotFound)
 		return
 	}
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(ErrFailedToRetrieveUser.Status, ErrFailedToRetrieveUser)
 		return
 	}
 
 	if ok := utils.VerifyPassword(data.Password, user.Password); !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid email or password"})
+		c.JSON(ErrInvalidCredentials.Status, ErrInvalidCredentials)
 		return
 	}
 
 	token, err := utils.CreateJwt(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(ErrFailedToCreateToken.Status, ErrFailedToCreateToken)
 		return
 	}
 
