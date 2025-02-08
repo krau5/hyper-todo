@@ -17,6 +17,7 @@ import (
 type UsersService interface {
 	Create(context context.Context, name, email, password string) error
 	GetByEmail(context.Context, string) (domain.User, error)
+	GetById(context.Context, int64) (domain.User, error)
 }
 
 type AuthHandler struct {
@@ -36,7 +37,7 @@ type LoginBody struct {
 
 var (
 	ErrUserExists           = appErrors.NewResponseError(http.StatusConflict, "user with this email already exists")
-	ErrUserNotFound         = appErrors.NewResponseError(http.StatusNotFound, "user with this email does not exist")
+	ErrUserNotFound         = appErrors.NewResponseError(http.StatusNotFound, "user was not found")
 	ErrInvalidCredentials   = appErrors.NewResponseError(http.StatusBadRequest, "invalid email or password")
 	ErrFailedToRetrieveUser = appErrors.NewResponseError(http.StatusInternalServerError, "failed to retrieve user")
 	ErrFailedToCreateUser   = appErrors.NewResponseError(http.StatusInternalServerError, "failed to create user")

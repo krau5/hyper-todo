@@ -50,3 +50,16 @@ func (s *Service) GetByEmail(ctx context.Context, email string) (domain.User, er
 
 	return user, nil
 }
+
+func (s *Service) GetById(ctx context.Context, id int64) (domain.User, error) {
+	if id == 0 {
+		return domain.User{}, fmt.Errorf("field id is missing or empty")
+	}
+
+	user, err := s.usersRepo.GetById(ctx, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
+}

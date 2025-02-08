@@ -37,6 +37,7 @@ func main() {
 	rest.NewPingHandler(r)
 	rest.NewAuthHandler(r, usersService)
 	rest.NewTasksHandler(r, tasksService)
+	rest.NewUsersHandler(r, usersService)
 
 	r.Run()
 }
