@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestTaskCreate(t *testing.T) {
+func TestCreateTask(t *testing.T) {
 	tasksRepo := mocks.NewTasksRepository(t)
 	usersRepo := userMocks.NewUsersRepository(t)
 	service := NewService(tasksRepo, usersRepo)
@@ -48,5 +48,36 @@ func TestTaskCreate(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, gorm.ErrRecordNotFound.Error())
+	})
+}
+
+func TestGetTask(t *testing.T) {
+	tasksRepo := mocks.NewTasksRepository(t)
+	usersRepo := userMocks.NewUsersRepository(t)
+	service := NewService(tasksRepo, usersRepo)
+
+	ctx := context.TODO()
+	mockTask := domain.Task{
+		Name:        "eat",
+		Description: "eat the pizza",
+		Deadline:    time.Now(),
+		UserId:      1,
+	}
+
+	t.Run("throws an error if id is zero", func(t *testing.T) {
+		expectedErr := fmt.Errorf("field id is missing or empty")
+		_, err := service.GetById(ctx, 0)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, expectedErr.Error())
+	})
+
+	t.Run("returns a task if it was found", func(t *testing.T) {
+		var taskId int64 = 1
+		tasksRepo.On("GetById", mock.Anything, taskId).Return(mockTask, nil)
+		task, err := service.GetById(ctx, taskId)
+
+		assert.Nil(t, err)
+		assert.Equal(t, task, mockTask)
 	})
 }
