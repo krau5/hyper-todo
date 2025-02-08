@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	errMissingToken   = &errors.ResponseError{Status: http.StatusUnauthorized, Message: "missing or invalid token"}
-	errInvalidToken   = &errors.ResponseError{Status: http.StatusUnauthorized, Message: "invalid token"}
-	errExtractSubject = &errors.ResponseError{Status: http.StatusBadRequest, Message: "failed to extract subject from token"}
-	errParseUserID    = &errors.ResponseError{Status: http.StatusBadRequest, Message: "failed to parse user ID from token"}
+	errMissingToken   = errors.NewResponseError(http.StatusUnauthorized, "missing or invalid token")
+	errInvalidToken   = errors.NewResponseError(http.StatusUnauthorized, "invalid token")
+	errExtractSubject = errors.NewResponseError(http.StatusBadRequest, "failed to extract subject from token")
+	errParseUserID    = errors.NewResponseError(http.StatusBadRequest, "failed to parse user ID from token")
 )
 
 func validateToken(c *gin.Context) (int64, *errors.ResponseError) {
@@ -43,8 +43,7 @@ func validateToken(c *gin.Context) (int64, *errors.ResponseError) {
 func AuthMiddleware(c *gin.Context) {
 	userId, err := validateToken(c)
 	if err != nil {
-		c.JSON(err.Status, err)
-		c.Abort()
+		c.AbortWithError(err.Status, err)
 		return
 	}
 

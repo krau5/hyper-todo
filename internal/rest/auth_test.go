@@ -14,10 +14,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type ResponseError struct {
-	Error string `json:"error"`
-}
-
 func TestRegisterHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -75,8 +71,7 @@ func TestRegisterError(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/register", &buf)
 	r.ServeHTTP(w, req)
 
-	respBody := ResponseError{Error: "user with this email already exists"}
-	expectedBody, _ := json.Marshal(respBody)
+	expectedBody, _ := json.Marshal(ErrUserExists)
 
 	assert.Equal(t, 409, w.Code)
 	assert.Equal(t, string(expectedBody), w.Body.String())

@@ -10,3 +10,7 @@ type ResponseError struct {
 func (e *ResponseError) Error() string {
 	return fmt.Sprintf("[%d] %s", e.Status, e.Message)
 }
+
+func NewResponseError(status int, message string) *ResponseError {
+	return &ResponseError{Status: status, Message: message}
+}
