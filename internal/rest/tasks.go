@@ -2,13 +2,16 @@ package rest
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/krau5/hyper-todo/domain"
-	"github.com/krau5/hyper-todo/internal/rest/errors"
+	appErrors "github.com/krau5/hyper-todo/internal/rest/errors"
 	"github.com/krau5/hyper-todo/internal/rest/middleware"
+	"gorm.io/gorm"
 )
 
 //go:generate mockery --name TasksService
@@ -32,8 +35,11 @@ type CreateTaskBody struct {
 }
 
 var (
-	ErrInvalidDeadline    = errors.NewResponseError(http.StatusBadRequest, "failed to parse deadline")
-	ErrFailedToCreateTask = errors.NewResponseError(http.StatusBadRequest, "failed to create task")
+	ErrInvalidDeadline    = appErrors.NewResponseError(http.StatusBadRequest, "failed to parse deadline")
+	ErrFailedToCreateTask = appErrors.NewResponseError(http.StatusBadRequest, "failed to create task")
+	ErrInvalidTaskId      = appErrors.NewResponseError(http.StatusBadRequest, "task id is missing or invalid")
+	ErrTaskNotFound       = appErrors.NewResponseError(http.StatusNotFound, "task was not found")
+	ErrFailedToDeleteTask = appErrors.NewResponseError(http.StatusInternalServerError, "failed to delete task")
 )
 
 func NewTasksHandler(r *gin.Engine, tasksService TasksService) {
@@ -42,13 +48,14 @@ func NewTasksHandler(r *gin.Engine, tasksService TasksService) {
 	}
 
 	r.POST("/tasks", middleware.AuthMiddleware, h.handleCreateTask)
+	r.DELETE("/tasks/:taskId", middleware.AuthMiddleware, h.handleDeleteTask)
 }
 
 func (h *TasksHandler) handleCreateTask(c *gin.Context) {
 	var data CreateTaskBody
 
 	if err := c.BindJSON(&data); err != nil {
-		c.JSON(errors.ErrInvalidBody.Status, errors.ErrInvalidBody)
+		c.JSON(appErrors.ErrInvalidBody.Status, appErrors.ErrInvalidBody)
 		return
 	}
 
@@ -71,4 +78,32 @@ func (h *TasksHandler) handleCreateTask(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, task)
+}
+
+func (h *TasksHandler) handleDeleteTask(c *gin.Context) {
+	rawTaskId := c.Param("taskId")
+	taskId, err := strconv.ParseInt(rawTaskId, 10, 64)
+	if err != nil {
+		c.JSON(ErrInvalidTaskId.Status, ErrInvalidTaskId)
+		return
+	}
+
+	task, err := h.tasksService.GetById(c.Request.Context(), taskId)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(ErrTaskNotFound.Status, ErrTaskNotFound)
+		return
+	}
+
+	if task.UserId != c.GetInt64("user-id") {
+		c.Status(http.StatusForbidden)
+		return
+	}
+
+	err = h.tasksService.DeleteById(c.Request.Context(), taskId)
+	if err != nil {
+		c.JSON(ErrFailedToDeleteTask.Status, ErrFailedToDeleteTask)
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

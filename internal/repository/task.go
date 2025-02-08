@@ -36,7 +36,14 @@ func (r *tasksRepository) Create(ctx context.Context, name, description string, 
 }
 
 func (r *tasksRepository) GetById(ctx context.Context, id int64) (domain.Task, error) {
-	return domain.Task{}, nil
+	task := TaskModel{}
+
+	result := r.db.WithContext(ctx).First(&task, id)
+	if result.Error != nil {
+		return domain.Task{}, result.Error
+	}
+
+	return task.Task, nil
 }
 
 func (r *tasksRepository) GetByUser(ctx context.Context, userId int64) ([]domain.Task, error) {
@@ -48,5 +55,6 @@ func (r *tasksRepository) UpdateById(ctx context.Context, id int64, data *domain
 }
 
 func (r *tasksRepository) DeleteById(ctx context.Context, id int64) error {
-	return nil
+	result := r.db.WithContext(ctx).Delete(&TaskModel{}, id)
+	return result.Error
 }
