@@ -2,7 +2,6 @@ package task
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -14,34 +13,32 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestCreateTask(t *testing.T) {
-	tasksRepo := mocks.NewTasksRepository(t)
-	usersRepo := userMocks.NewUsersRepository(t)
-	service := NewService(tasksRepo, usersRepo)
-
+func TestCreate(t *testing.T) {
 	ctx := context.TODO()
 	name := "task name"
 	description := "useful task description"
 	deadline := time.Now()
 	var userId int64 = 1
 
-	t.Run("throws an error if name is empty", func(t *testing.T) {
-		expectedErr := fmt.Errorf("field name is missing or empty")
+	t.Run("throws an error if name is invalid", func(t *testing.T) {
+		service, _, _ := setupTest(t)
+
 		_, err := service.Create(ctx, "", description, deadline, userId)
-
 		assert.Error(t, err)
-		assert.EqualError(t, err, expectedErr.Error())
+		assert.EqualError(t, err, ErrInvalidName.Error())
 	})
 
-	t.Run("throws an error if description is empty", func(t *testing.T) {
-		expectedErr := fmt.Errorf("field description is missing or empty")
+	t.Run("throws an error if description is invalid", func(t *testing.T) {
+		service, _, _ := setupTest(t)
+
 		_, err := service.Create(ctx, name, "", deadline, userId)
-
 		assert.Error(t, err)
-		assert.EqualError(t, err, expectedErr.Error())
+		assert.EqualError(t, err, ErrInvalidDescription.Error())
 	})
 
-	t.Run("throws an error if the user does not exist", func(t *testing.T) {
+	t.Run("throws an error if the user was not found", func(t *testing.T) {
+		service, _, usersRepo := setupTest(t)
+
 		usersRepo.On("GetById", mock.Anything, userId).Return(domain.User{}, gorm.ErrRecordNotFound)
 
 		_, err := service.Create(ctx, name, description, deadline, userId)
@@ -51,33 +48,79 @@ func TestCreateTask(t *testing.T) {
 	})
 }
 
-func TestGetTask(t *testing.T) {
+func TestGetById(t *testing.T) {
+	ctx := context.TODO()
+
+	t.Run("throws an error if id is invalid", func(t *testing.T) {
+		service, _, _ := setupTest(t)
+
+		_, err := service.GetById(ctx, 0)
+		assert.Error(t, err)
+		assert.EqualError(t, err, ErrInvalidId.Error())
+	})
+
+	t.Run("returns a task if it was found", func(t *testing.T) {
+		service, tasksRepo, _ := setupTest(t)
+
+		mockTask := domain.Task{
+			Name:        "eat",
+			Description: "eat the pizza",
+			Deadline:    time.Now(),
+			UserId:      1,
+		}
+		var taskId int64 = 1
+
+		tasksRepo.On("GetById", mock.Anything, taskId).Return(mockTask, nil)
+
+		task, err := service.GetById(ctx, taskId)
+		assert.Nil(t, err)
+		assert.Equal(t, task, mockTask)
+	})
+}
+
+func TestGetByUser(t *testing.T) {
+	ctx := context.TODO()
+	var userId int64 = 1
+
+	t.Run("throws an error if userId is invalid", func(t *testing.T) {
+		service, _, _ := setupTest(t)
+
+		_, err := service.GetByUser(ctx, 0)
+		assert.Error(t, err)
+		assert.EqualError(t, err, ErrInvalidUserId.Error())
+	})
+
+	t.Run("throws an error if user was not found", func(t *testing.T) {
+		service, _, usersRepo := setupTest(t)
+
+		usersRepo.On("GetById", mock.Anything, userId).Return(domain.User{}, gorm.ErrRecordNotFound)
+
+		_, err := service.GetByUser(ctx, userId)
+		assert.Error(t, err)
+		assert.EqualError(t, err, gorm.ErrRecordNotFound.Error())
+	})
+
+	t.Run("retrieves and returns tasks if userId is correct", func(t *testing.T) {
+		service, tasksRepo, usersRepo := setupTest(t)
+
+		mockTasks := []domain.Task{
+			{Name: "task 1", Description: "description 1", Deadline: time.Now()},
+			{Name: "task 2", Description: "description 2", Deadline: time.Now()},
+		}
+
+		usersRepo.On("GetById", mock.Anything, userId).Return(domain.User{}, nil)
+		tasksRepo.On("GetByUser", mock.Anything, userId).Return(mockTasks, nil)
+
+		tasks, err := service.GetByUser(ctx, userId)
+		assert.Nil(t, err)
+		assert.Equal(t, mockTasks, tasks)
+	})
+}
+
+func setupTest(t *testing.T) (*Service, *mocks.TasksRepository, *userMocks.UsersRepository) {
 	tasksRepo := mocks.NewTasksRepository(t)
 	usersRepo := userMocks.NewUsersRepository(t)
 	service := NewService(tasksRepo, usersRepo)
 
-	ctx := context.TODO()
-	mockTask := domain.Task{
-		Name:        "eat",
-		Description: "eat the pizza",
-		Deadline:    time.Now(),
-		UserId:      1,
-	}
-
-	t.Run("throws an error if id is zero", func(t *testing.T) {
-		expectedErr := fmt.Errorf("field id is missing or empty")
-		_, err := service.GetById(ctx, 0)
-
-		assert.Error(t, err)
-		assert.EqualError(t, err, expectedErr.Error())
-	})
-
-	t.Run("returns a task if it was found", func(t *testing.T) {
-		var taskId int64 = 1
-		tasksRepo.On("GetById", mock.Anything, taskId).Return(mockTask, nil)
-		task, err := service.GetById(ctx, taskId)
-
-		assert.Nil(t, err)
-		assert.Equal(t, task, mockTask)
-	})
+	return service, tasksRepo, usersRepo
 }

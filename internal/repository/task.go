@@ -47,7 +47,18 @@ func (r *tasksRepository) GetById(ctx context.Context, id int64) (domain.Task, e
 }
 
 func (r *tasksRepository) GetByUser(ctx context.Context, userId int64) ([]domain.Task, error) {
-	return []domain.Task{}, nil
+	rawTasks := []TaskModel{}
+	result := r.db.WithContext(ctx).Where("userId = ?", userId).Find(&rawTasks)
+	if result.Error != nil {
+		return []domain.Task{}, result.Error
+	}
+
+	tasks := make([]domain.Task, len(rawTasks))
+	for i, taskModel := range rawTasks {
+		tasks[i] = taskModel.Task
+	}
+
+	return tasks, nil
 }
 
 func (r *tasksRepository) UpdateById(ctx context.Context, id int64, data *domain.Task) (domain.Task, error) {
