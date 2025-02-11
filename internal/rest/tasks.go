@@ -35,11 +35,12 @@ type CreateTaskBody struct {
 }
 
 var (
-	ErrInvalidDeadline    = appErrors.NewResponseError(http.StatusBadRequest, "failed to parse deadline")
-	ErrFailedToCreateTask = appErrors.NewResponseError(http.StatusBadRequest, "failed to create task")
-	ErrInvalidTaskId      = appErrors.NewResponseError(http.StatusBadRequest, "task id is missing or invalid")
-	ErrTaskNotFound       = appErrors.NewResponseError(http.StatusNotFound, "task was not found")
-	ErrFailedToDeleteTask = appErrors.NewResponseError(http.StatusInternalServerError, "failed to delete task")
+	ErrInvalidDeadline       = appErrors.NewResponseError(http.StatusBadRequest, "failed to parse deadline")
+	ErrFailedToCreateTask    = appErrors.NewResponseError(http.StatusBadRequest, "failed to create task")
+	ErrInvalidTaskId         = appErrors.NewResponseError(http.StatusBadRequest, "task id is missing or invalid")
+	ErrTaskNotFound          = appErrors.NewResponseError(http.StatusNotFound, "task was not found")
+	ErrFailedToDeleteTask    = appErrors.NewResponseError(http.StatusInternalServerError, "failed to delete task")
+	ErrFailedToRetrieveTasks = appErrors.NewResponseError(http.StatusInternalServerError, "failed to retrieve tasks")
 )
 
 func NewTasksHandler(r *gin.Engine, tasksService TasksService) {
@@ -47,8 +48,25 @@ func NewTasksHandler(r *gin.Engine, tasksService TasksService) {
 		tasksService: tasksService,
 	}
 
+	r.GET("/tasks", middleware.AuthMiddleware, h.handleGetTasks)
 	r.POST("/tasks", middleware.AuthMiddleware, h.handleCreateTask)
 	r.DELETE("/tasks/:taskId", middleware.AuthMiddleware, h.handleDeleteTask)
+}
+
+func (h *TasksHandler) handleGetTasks(c *gin.Context) {
+	tasks, err := h.tasksService.GetByUser(c.Request.Context(), c.GetInt64("user-id"))
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(ErrUserNotFound.Status, ErrUserNotFound)
+		return
+	}
+
+	if err != nil {
+		c.JSON(ErrFailedToRetrieveTasks.Status, ErrFailedToRetrieveTasks)
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
 }
 
 func (h *TasksHandler) handleCreateTask(c *gin.Context) {

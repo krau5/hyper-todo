@@ -2,11 +2,12 @@ package task
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/krau5/hyper-todo/domain"
 	"github.com/krau5/hyper-todo/user"
+	"gorm.io/gorm"
 )
 
 //go:generate mockery --name TasksRepository
@@ -23,6 +24,13 @@ type Service struct {
 	tasksRepo TasksRepository
 }
 
+var (
+	ErrInvalidName        = errors.New("name is missing or empty")
+	ErrInvalidDescription = errors.New("description is missing or empty")
+	ErrInvalidId          = errors.New("id is missing or empty")
+	ErrInvalidUserId      = errors.New("userId is missing or empty")
+)
+
 func NewService(tasksRepo TasksRepository, usersRepo user.UsersRepository) *Service {
 	return &Service{
 		tasksRepo: tasksRepo,
@@ -32,11 +40,11 @@ func NewService(tasksRepo TasksRepository, usersRepo user.UsersRepository) *Serv
 
 func (s *Service) Create(ctx context.Context, name, description string, deadline time.Time, userId int64) (domain.Task, error) {
 	if len(name) == 0 {
-		return domain.Task{}, fmt.Errorf("field name is missing or empty")
+		return domain.Task{}, ErrInvalidName
 	}
 
 	if len(description) == 0 {
-		return domain.Task{}, fmt.Errorf("field description is missing or empty")
+		return domain.Task{}, ErrInvalidDescription
 	}
 
 	_, err := s.usersRepo.GetById(ctx, userId)
@@ -54,7 +62,7 @@ func (s *Service) Create(ctx context.Context, name, description string, deadline
 
 func (s *Service) GetById(ctx context.Context, id int64) (domain.Task, error) {
 	if id == 0 {
-		return domain.Task{}, fmt.Errorf("field id is missing or empty")
+		return domain.Task{}, ErrInvalidId
 	}
 
 	task, err := s.tasksRepo.GetById(ctx, id)
@@ -66,7 +74,21 @@ func (s *Service) GetById(ctx context.Context, id int64) (domain.Task, error) {
 }
 
 func (s *Service) GetByUser(ctx context.Context, userId int64) ([]domain.Task, error) {
-	return []domain.Task{}, nil
+	if userId == 0 {
+		return []domain.Task{}, ErrInvalidUserId
+	}
+
+	_, err := s.usersRepo.GetById(ctx, userId)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return []domain.Task{}, gorm.ErrRecordNotFound
+	}
+
+	tasks, err := s.tasksRepo.GetByUser(ctx, userId)
+	if err != nil {
+		return []domain.Task{}, err
+	}
+
+	return tasks, nil
 }
 
 func (s *Service) UpdateById(ctx context.Context, id int64, data *domain.Task) (domain.Task, error) {
@@ -75,7 +97,7 @@ func (s *Service) UpdateById(ctx context.Context, id int64, data *domain.Task) (
 
 func (s *Service) DeleteById(ctx context.Context, id int64) error {
 	if id == 0 {
-		return fmt.Errorf("field id is missing or empty")
+		return ErrInvalidId
 	}
 
 	return s.tasksRepo.DeleteById(ctx, id)
