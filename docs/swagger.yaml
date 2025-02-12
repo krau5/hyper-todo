@@ -1,4 +1,13 @@
 definitions:
+  domain.User:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: user
+        type: string
+    type: object
   github_com_krau5_hyper-todo_internal_rest_errors.ResponseError:
     properties:
       message:
@@ -49,6 +58,7 @@ definitions:
     type: object
 info:
   contact: {}
+  title: Hyper Todo API
 paths:
   /login:
     post:
@@ -82,6 +92,29 @@ paths:
       summary: Login a user
       tags:
       - auth
+  /me:
+    get:
+      description: Retrieve details of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details
+          schema:
+            $ref: '#/definitions/domain.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user details
+      tags:
+      - users
   /ping:
     get:
       consumes:
@@ -129,4 +162,9 @@ paths:
       summary: Register a new user
       tags:
       - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

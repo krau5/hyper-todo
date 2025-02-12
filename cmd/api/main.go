@@ -16,6 +16,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// @title Hyper Todo API
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	dsn := config.GetDsn()
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
