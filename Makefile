@@ -5,4 +5,4 @@ test:
 	@go test -v ./...
 
 run: build
-	@./bin/hyper-todo
+	@export GIN_MODE=release && ./bin/hyper-todo
