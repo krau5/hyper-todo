@@ -14,56 +14,47 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestMeHandler(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+var userId int64 = 1
 
-	var userId int64 = 1
+func TestMeHandler(t *testing.T) {
 	mockUser := domain.User{Name: "user", Email: "user@example.com"}
 
-	usersService := mocks.NewUsersService(t)
+	r, usersService := setupUsersTest(t)
 	usersService.On("GetById", mock.Anything, userId).Return(mockUser, nil)
-
-	h := &UsersHandler{usersService: usersService}
-	r := gin.New()
-
-	r.Use(func(c *gin.Context) {
-		c.Set("user-id", userId)
-		c.Next()
-	})
-	r.GET("/me", h.handleMe)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/me", nil)
 	r.ServeHTTP(w, req)
 
 	expectedBody, _ := json.Marshal(mockUser)
-
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, string(expectedBody), w.Body.String())
 }
 
-func TestMeHandlerError(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	var userId int64 = 1
-	usersService := mocks.NewUsersService(t)
+func TestMeHandler_UserNotFound(t *testing.T) {
+	r, usersService := setupUsersTest(t)
 	usersService.On("GetById", mock.Anything, userId).Return(domain.User{}, gorm.ErrRecordNotFound)
-
-	h := &UsersHandler{usersService: usersService}
-	r := gin.New()
-
-	r.Use(func(c *gin.Context) {
-		c.Set("user-id", userId)
-		c.Next()
-	})
-	r.GET("/me", h.handleMe)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/me", nil)
 	r.ServeHTTP(w, req)
 
 	expectedBody, _ := json.Marshal(ErrUserNotFound)
-
 	assert.Equal(t, 404, w.Code)
 	assert.Equal(t, string(expectedBody), w.Body.String())
+}
+
+func setupUsersTest(t *testing.T) (*gin.Engine, *mocks.UsersService) {
+	gin.SetMode(gin.TestMode)
+
+	usersService := mocks.NewUsersService(t)
+	h := &UsersHandler{usersService: usersService}
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user-id", userId)
+		c.Next()
+	})
+	r.GET("/me", h.handleMe)
+
+	return r, usersService
 }

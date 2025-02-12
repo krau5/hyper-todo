@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/krau5/hyper-todo/domain"
 )
@@ -18,21 +18,28 @@ type Service struct {
 	usersRepo UsersRepository
 }
 
+var (
+	ErrInvalidName     = errors.New("name is missing or empty")
+	ErrInvalidEmail    = errors.New("email is missing or empty")
+	ErrInvalidPassword = errors.New("password is missing or empty")
+	ErrInvalidId       = errors.New("id is missing or empty")
+)
+
 func NewService(usersRepo UsersRepository) *Service {
 	return &Service{usersRepo: usersRepo}
 }
 
 func (s *Service) Create(ctx context.Context, name, email, password string) error {
 	if len(name) == 0 {
-		return fmt.Errorf("field name is missing or empty")
+		return ErrInvalidName
 	}
 
 	if len(email) == 0 {
-		return fmt.Errorf("field email is missing or empty")
+		return ErrInvalidEmail
 	}
 
 	if len(password) == 0 {
-		return fmt.Errorf("field password is missing or empty")
+		return ErrInvalidPassword
 	}
 
 	return s.usersRepo.Create(ctx, name, email, password)
@@ -40,7 +47,7 @@ func (s *Service) Create(ctx context.Context, name, email, password string) erro
 
 func (s *Service) GetByEmail(ctx context.Context, email string) (domain.User, error) {
 	if len(email) == 0 {
-		return domain.User{}, fmt.Errorf("field email is missing or empty")
+		return domain.User{}, ErrInvalidEmail
 	}
 
 	user, err := s.usersRepo.GetByEmail(ctx, email)
@@ -53,7 +60,7 @@ func (s *Service) GetByEmail(ctx context.Context, email string) (domain.User, er
 
 func (s *Service) GetById(ctx context.Context, id int64) (domain.User, error) {
 	if id == 0 {
-		return domain.User{}, fmt.Errorf("field id is missing or empty")
+		return domain.User{}, ErrInvalidId
 	}
 
 	user, err := s.usersRepo.GetById(ctx, id)
