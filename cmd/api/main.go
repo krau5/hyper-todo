@@ -5,10 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/krau5/hyper-todo/config"
+	_ "github.com/krau5/hyper-todo/docs"
 	"github.com/krau5/hyper-todo/internal/repository"
 	"github.com/krau5/hyper-todo/internal/rest"
 	"github.com/krau5/hyper-todo/task"
 	"github.com/krau5/hyper-todo/user"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -27,6 +30,8 @@ func main() {
 	log.Println("Migrations ran successfully")
 
 	r := gin.Default()
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	usersRepo := repository.NewUserRepository(db)
 	usersService := user.NewService(usersRepo)

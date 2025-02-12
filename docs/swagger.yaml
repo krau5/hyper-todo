@@ -1,0 +1,25 @@
+definitions:
+  rest.PingResponse:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Get a "pong" response from the server
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns a pong message
+          schema:
+            $ref: '#/definitions/rest.PingResponse'
+      summary: Ping the server
+      tags:
+      - Echo
+swagger: "2.0"
