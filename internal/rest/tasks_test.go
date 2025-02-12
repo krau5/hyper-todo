@@ -17,8 +17,6 @@ import (
 )
 
 func TestCreateTaskHandler(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
 	name := "eat"
 	description := "eat the pizza"
 	rawDeadline := "2025-01-01T22:22:22.220Z"
@@ -38,15 +36,8 @@ func TestCreateTaskHandler(t *testing.T) {
 		UserId:      userId,
 	}
 
-	tasksService := mocks.NewTasksService(t)
+	r, tasksService := setupTasksTest(t)
 	tasksService.On("Create", mock.Anything, name, description, deadline, userId).Return(mockTask, nil)
-
-	h := &TasksHandler{
-		tasksService: tasksService,
-	}
-
-	r := gin.New()
-	r.POST("/tasks", h.handleCreateTask)
 
 	body := CreateTaskBody{
 		Name:        name,
@@ -61,18 +52,14 @@ func TestCreateTaskHandler(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/tasks", &buf)
-
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
-
 	expectedBody, _ := json.Marshal(mockTask)
+	assert.Equal(t, http.StatusCreated, w.Code)
 	assert.Equal(t, string(expectedBody), w.Body.String())
 }
 
 func TestGetTasksHandler(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
 	var userId int64 = 1
 	mockTasks := []domain.Task{
 		{
@@ -89,83 +76,62 @@ func TestGetTasksHandler(t *testing.T) {
 		},
 	}
 
-	tasksService := mocks.NewTasksService(t)
+	r, tasksService := setupTasksTest(t)
 	tasksService.On("GetByUser", mock.Anything, userId).Return(mockTasks, nil)
-
-	h := &TasksHandler{
-		tasksService: tasksService,
-	}
-	r := gin.New()
-	r.Use(func(c *gin.Context) {
-		c.Set("user-id", userId)
-		c.Next()
-	})
-	r.GET("/tasks", h.handleGetTasks)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/tasks", nil)
-
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-
 	expectedBody, _ := json.Marshal(mockTasks)
+	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, string(expectedBody), w.Body.String())
 }
 
 func TestGetTasksHandler_UserNotFound(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
 	var userId int64 = 1
 
-	tasksService := mocks.NewTasksService(t)
+	r, tasksService := setupTasksTest(t)
 	tasksService.On("GetByUser", mock.Anything, userId).Return([]domain.Task{}, gorm.ErrRecordNotFound)
-
-	h := &TasksHandler{
-		tasksService: tasksService,
-	}
-	r := gin.New()
-	r.Use(func(c *gin.Context) {
-		c.Set("user-id", userId)
-		c.Next()
-	})
-	r.GET("/tasks", h.handleGetTasks)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/tasks", nil)
-
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, ErrUserNotFound.Status, w.Code)
-
 	expectedBody, _ := json.Marshal(ErrUserNotFound)
+	assert.Equal(t, ErrUserNotFound.Status, w.Code)
 	assert.Equal(t, string(expectedBody), w.Body.String())
 }
 
 func TestGetTasksHandler_FailedToRetrieveTasks(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+	r, tasksService := setupTasksTest(t)
 
-	var userId int64 = 1
-
-	tasksService := mocks.NewTasksService(t)
 	tasksService.On("GetByUser", mock.Anything, userId).Return([]domain.Task{}, assert.AnError)
-
-	h := &TasksHandler{
-		tasksService: tasksService,
-	}
-	r := gin.New()
-	r.Use(func(c *gin.Context) {
-		c.Set("user-id", userId)
-		c.Next()
-	})
-	r.GET("/tasks", h.handleGetTasks)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/tasks", nil)
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, ErrFailedToRetrieveTasks.Status, w.Code)
-
 	expectedBody, _ := json.Marshal(ErrFailedToRetrieveTasks)
+	assert.Equal(t, ErrFailedToRetrieveTasks.Status, w.Code)
 	assert.Equal(t, string(expectedBody), w.Body.String())
+}
+
+func setupTasksTest(t *testing.T) (*gin.Engine, *mocks.TasksService) {
+	gin.SetMode(gin.TestMode)
+
+	tasksService := mocks.NewTasksService(t)
+	h := &TasksHandler{
+		tasksService: tasksService,
+	}
+	r := gin.New()
+
+	r.Use(func(c *gin.Context) {
+		c.Set("user-id", userId)
+		c.Next()
+	})
+	r.GET("/tasks", h.handleGetTasks)
+	r.POST("/tasks", h.handleCreateTask)
+
+	return r, tasksService
 }

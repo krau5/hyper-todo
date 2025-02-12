@@ -19,7 +19,7 @@ var userId int64 = 1
 func TestMeHandler(t *testing.T) {
 	mockUser := domain.User{Name: "user", Email: "user@example.com"}
 
-	r, usersService := setupTest(t)
+	r, usersService := setupUsersTest(t)
 	usersService.On("GetById", mock.Anything, userId).Return(mockUser, nil)
 
 	w := httptest.NewRecorder()
@@ -31,8 +31,8 @@ func TestMeHandler(t *testing.T) {
 	assert.Equal(t, string(expectedBody), w.Body.String())
 }
 
-func TestMeHandlerError(t *testing.T) {
-	r, usersService := setupTest(t)
+func TestMeHandler_UserNotFound(t *testing.T) {
+	r, usersService := setupUsersTest(t)
 	usersService.On("GetById", mock.Anything, userId).Return(domain.User{}, gorm.ErrRecordNotFound)
 
 	w := httptest.NewRecorder()
@@ -44,7 +44,7 @@ func TestMeHandlerError(t *testing.T) {
 	assert.Equal(t, string(expectedBody), w.Body.String())
 }
 
-func setupTest(t *testing.T) (*gin.Engine, *mocks.UsersService) {
+func setupUsersTest(t *testing.T) (*gin.Engine, *mocks.UsersService) {
 	gin.SetMode(gin.TestMode)
 
 	usersService := mocks.NewUsersService(t)
