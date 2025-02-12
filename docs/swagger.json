@@ -4,6 +4,55 @@
         "contact": {}
     },
     "paths": {
+        "/login": {
+            "post": {
+                "description": "Authenticate a user and return a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login a user",
+                "parameters": [
+                    {
+                        "description": "User login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_rest.LoginBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User logged in successfully"
+                    },
+                    "400": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve user or create token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "Get a \"pong\" response from the server",
@@ -14,14 +63,63 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Echo"
+                    "ping"
                 ],
                 "summary": "Ping the server",
                 "responses": {
                     "200": {
                         "description": "Returns a pong message",
                         "schema": {
-                            "$ref": "#/definitions/rest.PingResponse"
+                            "$ref": "#/definitions/internal_rest.PingResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "description": "Create a new user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User registration details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_rest.RegisterBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User created successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "409": {
+                        "description": "User with this email already exists",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create user",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
                         }
                     }
                 }
@@ -29,11 +127,69 @@
         }
     },
     "definitions": {
-        "rest.PingResponse": {
+        "github_com_krau5_hyper-todo_internal_rest_errors.ResponseError": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_rest.LoginBody": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "User's email",
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "password": {
+                    "description": "User's password",
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "password123"
+                }
+            }
+        },
+        "internal_rest.PingResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_rest.RegisterBody": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "User's email",
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "name": {
+                    "description": "User's full name",
+                    "type": "string",
+                    "minLength": 4,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "description": "User's password",
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "password123"
                 }
             }
         }

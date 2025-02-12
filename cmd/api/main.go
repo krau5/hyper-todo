@@ -31,7 +31,7 @@ func main() {
 
 	r := gin.Default()
 
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
 
 	usersRepo := repository.NewUserRepository(db)
 	usersService := user.NewService(usersRepo)

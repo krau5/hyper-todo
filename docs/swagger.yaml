@@ -1,12 +1,87 @@
 definitions:
-  rest.PingResponse:
+  github_com_krau5_hyper-todo_internal_rest_errors.ResponseError:
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  internal_rest.LoginBody:
+    properties:
+      email:
+        description: User's email
+        example: john@example.com
+        type: string
+      password:
+        description: User's password
+        example: password123
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_rest.PingResponse:
     properties:
       message:
         type: string
     type: object
+  internal_rest.RegisterBody:
+    properties:
+      email:
+        description: User's email
+        example: john@example.com
+        type: string
+      name:
+        description: User's full name
+        example: John Doe
+        minLength: 4
+        type: string
+      password:
+        description: User's password
+        example: password123
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
 info:
   contact: {}
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return a JWT token
+      parameters:
+      - description: User login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_rest.LoginBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged in successfully
+        "400":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+        "500":
+          description: Failed to retrieve user or create token
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+      summary: Login a user
+      tags:
+      - auth
   /ping:
     get:
       consumes:
@@ -18,8 +93,40 @@ paths:
         "200":
           description: Returns a pong message
           schema:
-            $ref: '#/definitions/rest.PingResponse'
+            $ref: '#/definitions/internal_rest.PingResponse'
       summary: Ping the server
       tags:
-      - Echo
+      - ping
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User registration details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_rest.RegisterBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+        "409":
+          description: User with this email already exists
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+        "500":
+          description: Failed to create user
+          schema:
+            $ref: '#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError'
+      summary: Register a new user
+      tags:
+      - auth
 swagger: "2.0"

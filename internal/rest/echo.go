@@ -24,7 +24,7 @@ func NewPingHandler(g *gin.Engine) {
 // handlePing responds with a "pong" message.
 // @Summary Ping the server
 // @Description Get a "pong" response from the server
-// @Tags Echo
+// @Tags ping
 // @Accept json
 // @Produce json
 // @Success 200 {object} PingResponse "Returns a pong message"
