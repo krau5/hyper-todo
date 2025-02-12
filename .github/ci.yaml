@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.23
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run linter
+        run: go vet ./...
+
+      - name: Run formatter
+        run: go fmt -l ./...
+
+      - name: Build
+        run: make build
+
+      - name: Run tests
+        run: make test
