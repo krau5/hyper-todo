@@ -22,17 +22,18 @@ func NewTasksRepository(db *gorm.DB) *tasksRepository {
 }
 
 func (r *tasksRepository) Create(ctx context.Context, name, description string, deadline time.Time, userId int64) (domain.Task, error) {
-	task := domain.Task{Name: name, Description: description, Deadline: deadline, UserId: userId}
-	val := TaskModel{
-		Task: task,
+	taskModel := TaskModel{
+		Task: domain.Task{Name: name, Description: description, Deadline: deadline, UserId: userId},
 	}
 
-	result := r.db.WithContext(ctx).Create(&val)
+	result := r.db.WithContext(ctx).Create(&taskModel)
 	if result.Error != nil {
 		return domain.Task{}, result.Error
 	}
 
-	return task, nil
+	taskModel.Task.ID = int64(taskModel.Model.ID)
+
+	return taskModel.Task, nil
 }
 
 func (r *tasksRepository) GetById(ctx context.Context, id int64) (domain.Task, error) {
@@ -48,7 +49,7 @@ func (r *tasksRepository) GetById(ctx context.Context, id int64) (domain.Task, e
 
 func (r *tasksRepository) GetByUser(ctx context.Context, userId int64) ([]domain.Task, error) {
 	rawTasks := []TaskModel{}
-	result := r.db.WithContext(ctx).Where("userId = ?", userId).Find(&rawTasks)
+	result := r.db.WithContext(ctx).Where("user_id = ?", userId).Find(&rawTasks)
 	if result.Error != nil {
 		return []domain.Task{}, result.Error
 	}

@@ -162,9 +162,167 @@
                     }
                 }
             }
+        },
+        "/tasks": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of tasks for the currently authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Get all tasks for the current user",
+                "responses": {
+                    "200": {
+                        "description": "List of tasks",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Task"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve tasks",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new task for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Create a new task",
+                "parameters": [
+                    {
+                        "description": "Task details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_rest.CreateTaskBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created task",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Task"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or deadline",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create task",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{taskId}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a task by ID for the authenticated user",
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Delete a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Task deleted successfully"
+                    },
+                    "400": {
+                        "description": "Invalid task ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden if the task does not belong to the user"
+                    },
+                    "404": {
+                        "description": "Task not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete task",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "domain.Task": {
+            "type": "object",
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.User": {
             "type": "object",
             "properties": {
@@ -186,6 +344,26 @@
                 },
                 "status": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_rest.CreateTaskBody": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "description": "Deadline for the task (RFC3339 format)",
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                },
+                "description": {
+                    "description": "Description of the task",
+                    "type": "string",
+                    "example": "Eat the pizza"
+                },
+                "name": {
+                    "description": "Name of the task",
+                    "type": "string",
+                    "example": "Eat"
                 }
             }
         },
