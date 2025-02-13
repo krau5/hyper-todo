@@ -3,10 +3,12 @@ module github.com/krau5/hyper-todo
 go 1.23.4
 
 require (
+	github.com/gin-contrib/zap v1.1.4
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/swag v1.16.4
+	go.uber.org/zap v1.27.0
 )
 
 require (
@@ -19,6 +21,7 @@ require (
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 )
 
