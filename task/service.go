@@ -15,7 +15,7 @@ type TasksRepository interface {
 	Create(ctx context.Context, name, description string, deadline time.Time, userId int64) (domain.Task, error)
 	GetById(context.Context, int64) (domain.Task, error)
 	GetByUser(context.Context, int64) ([]domain.Task, error)
-	UpdateById(context.Context, int64, *domain.Task) (domain.Task, error)
+	UpdateById(context.Context, int64, domain.UpdateTaskData) (domain.Task, error)
 	DeleteById(context.Context, int64) error
 }
 
@@ -91,8 +91,17 @@ func (s *Service) GetByUser(ctx context.Context, userId int64) ([]domain.Task, e
 	return tasks, nil
 }
 
-func (s *Service) UpdateById(ctx context.Context, id int64, data *domain.Task) (domain.Task, error) {
-	return domain.Task{}, nil
+func (s *Service) UpdateById(ctx context.Context, id int64, data domain.UpdateTaskData) (domain.Task, error) {
+	if id == 0 {
+		return domain.Task{}, ErrInvalidId
+	}
+
+	task, err := s.tasksRepo.UpdateById(ctx, id, data)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	return task, nil
 }
 
 func (s *Service) DeleteById(ctx context.Context, id int64) error {

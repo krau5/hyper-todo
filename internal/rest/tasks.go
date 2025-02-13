@@ -19,7 +19,7 @@ type TasksService interface {
 	Create(ctx context.Context, name, description string, deadline time.Time, userId int64) (domain.Task, error)
 	GetById(context.Context, int64) (domain.Task, error)
 	GetByUser(context.Context, int64) ([]domain.Task, error)
-	UpdateById(context.Context, int64, *domain.Task) (domain.Task, error)
+	UpdateById(context.Context, int64, domain.UpdateTaskData) (domain.Task, error)
 	DeleteById(context.Context, int64) error
 }
 
