@@ -43,7 +43,6 @@ func TestCreateTaskHandler(t *testing.T) {
 		Name:        name,
 		Description: description,
 		Deadline:    rawDeadline,
-		UserId:      userId,
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {

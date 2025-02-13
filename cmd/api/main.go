@@ -5,14 +5,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/krau5/hyper-todo/config"
+	_ "github.com/krau5/hyper-todo/docs"
 	"github.com/krau5/hyper-todo/internal/repository"
 	"github.com/krau5/hyper-todo/internal/rest"
 	"github.com/krau5/hyper-todo/task"
 	"github.com/krau5/hyper-todo/user"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+// @title Hyper Todo API
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	dsn := config.GetDsn()
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -27,6 +34,8 @@ func main() {
 	log.Println("Migrations ran successfully")
 
 	r := gin.Default()
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
 
 	usersRepo := repository.NewUserRepository(db)
 	usersService := user.NewService(usersRepo)

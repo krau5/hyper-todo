@@ -20,19 +20,22 @@ type UsersService interface {
 	GetById(context.Context, int64) (domain.User, error)
 }
 
+// AuthHandler handles authentication requests.
 type AuthHandler struct {
 	usersService UsersService
 }
 
+// RegisterBody defines the request body for the /register endpoint.
 type RegisterBody struct {
-	Name     string `json:"name" binding:"required,min=4"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Name     string `json:"name" binding:"required,min=4" example:"John Doe"`          // User's full name
+	Email    string `json:"email" binding:"required,email" example:"john@example.com"` // User's email
+	Password string `json:"password" binding:"required,min=8" example:"password123"`   // User's password
 }
 
+// LoginBody defines the request body for the /login endpoint.
 type LoginBody struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Email    string `json:"email" binding:"required,email" example:"john@example.com"` // User's email
+	Password string `json:"password" binding:"required,min=8" example:"password123"`   // User's password
 }
 
 var (
@@ -44,6 +47,18 @@ var (
 	ErrFailedToCreateToken  = appErrors.NewResponseError(http.StatusInternalServerError, "failed to create jwt token")
 )
 
+// NewAuthHandler registers the auth handler with the Gin engine.
+// @Summary Register a new user
+// @Description Create a new user account
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body RegisterBody true "User registration details"
+// @Success 201 "User created successfully"
+// @Failure 400 {object} appErrors.ResponseError "Invalid request body"
+// @Failure 409 {object} appErrors.ResponseError "User with this email already exists"
+// @Failure 500 {object} appErrors.ResponseError "Failed to create user"
+// @Router /register [post]
 func NewAuthHandler(g *gin.Engine, usersService UsersService) {
 	h := &AuthHandler{usersService: usersService}
 
@@ -51,6 +66,18 @@ func NewAuthHandler(g *gin.Engine, usersService UsersService) {
 	g.POST("/login", h.handleLogin)
 }
 
+// handleRegister processes user registration requests.
+// @Summary Register a new user
+// @Description Create a new user account
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body RegisterBody true "User registration details"
+// @Success 201 "User created successfully"
+// @Failure 400 {object} appErrors.ResponseError "Invalid request body"
+// @Failure 409 {object} appErrors.ResponseError "User with this email already exists"
+// @Failure 500 {object} appErrors.ResponseError "Failed to create user"
+// @Router /register [post]
 func (h *AuthHandler) handleRegister(c *gin.Context) {
 	var data RegisterBody
 
@@ -79,6 +106,19 @@ func (h *AuthHandler) handleRegister(c *gin.Context) {
 	c.Status(http.StatusCreated)
 }
 
+// handleLogin processes user login requests.
+// @Summary Login a user
+// @Description Authenticate a user and return a JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body LoginBody true "User login credentials"
+// @Success 200 "User logged in successfully"
+// @Failure 400 {object} appErrors.ResponseError "Invalid request body"
+// @Failure 404 {object} appErrors.ResponseError "User not found"
+// @Failure 400 {object} appErrors.ResponseError "Invalid credentials"
+// @Failure 500 {object} appErrors.ResponseError "Failed to retrieve user or create token"
+// @Router /login [post]
 func (h *AuthHandler) handleLogin(c *gin.Context) {
 	var data LoginBody
 

@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+// ResponseError defines a standard error response.
+// @name ResponseError
 type ResponseError struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`

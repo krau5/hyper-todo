@@ -1,0 +1,433 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Hyper Todo API",
+        "contact": {}
+    },
+    "paths": {
+        "/login": {
+            "post": {
+                "description": "Authenticate a user and return a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login a user",
+                "parameters": [
+                    {
+                        "description": "User login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_rest.LoginBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User logged in successfully"
+                    },
+                    "400": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve user or create token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve details of the currently authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user details",
+                "responses": {
+                    "200": {
+                        "description": "User details",
+                        "schema": {
+                            "$ref": "#/definitions/domain.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/ping": {
+            "get": {
+                "description": "Get a \"pong\" response from the server",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ping"
+                ],
+                "summary": "Ping the server",
+                "responses": {
+                    "200": {
+                        "description": "Returns a pong message",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rest.PingResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "description": "Create a new user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User registration details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_rest.RegisterBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User created successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "409": {
+                        "description": "User with this email already exists",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create user",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of tasks for the currently authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Get all tasks for the current user",
+                "responses": {
+                    "200": {
+                        "description": "List of tasks",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Task"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve tasks",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new task for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Create a new task",
+                "parameters": [
+                    {
+                        "description": "Task details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_rest.CreateTaskBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created task",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Task"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or deadline",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create task",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{taskId}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a task by ID for the authenticated user",
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Delete a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Task deleted successfully"
+                    },
+                    "400": {
+                        "description": "Invalid task ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden if the task does not belong to the user"
+                    },
+                    "404": {
+                        "description": "Task not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete task",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.Task": {
+            "type": "object",
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "user"
+                }
+            }
+        },
+        "github_com_krau5_hyper-todo_internal_rest_errors.ResponseError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_rest.CreateTaskBody": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "description": "Deadline for the task (RFC3339 format)",
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                },
+                "description": {
+                    "description": "Description of the task",
+                    "type": "string",
+                    "example": "Eat the pizza"
+                },
+                "name": {
+                    "description": "Name of the task",
+                    "type": "string",
+                    "example": "Eat"
+                }
+            }
+        },
+        "internal_rest.LoginBody": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "User's email",
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "password": {
+                    "description": "User's password",
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "password123"
+                }
+            }
+        },
+        "internal_rest.PingResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_rest.RegisterBody": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "User's email",
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "name": {
+                    "description": "User's full name",
+                    "type": "string",
+                    "minLength": 4,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "description": "User's password",
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "password123"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

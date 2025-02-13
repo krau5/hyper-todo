@@ -6,3 +6,6 @@ test:
 
 run: build
 	@export GIN_MODE=release && ./bin/hyper-todo
+
+generate-swagger:
+	@swag init --parseDependency --parseInternal -g cmd/api/main.go

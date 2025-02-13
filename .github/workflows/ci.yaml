@@ -23,7 +23,7 @@ jobs:
         run: go vet ./...
 
       - name: Run formatter
-        run: go fmt -l ./...
+        run: gofmt -l .
 
       - name: Build
         run: make build
