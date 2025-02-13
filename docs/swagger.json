@@ -299,6 +299,71 @@
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a task by ID for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Update a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Task update data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateTaskData"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated task",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Task"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task ID or request body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden if the task does not belong to the user"
+                    },
+                    "404": {
+                        "description": "Task not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update task",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_krau5_hyper-todo_internal_rest_errors.ResponseError"
+                        }
+                    }
+                }
             }
         }
     },
@@ -317,6 +382,23 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UpdateTaskData": {
+            "type": "object",
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"

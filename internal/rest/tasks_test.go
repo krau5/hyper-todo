@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,6 +16,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 )
+
+const taskId int64 = 1
 
 func TestCreateTaskHandler(t *testing.T) {
 	name := "eat"
@@ -116,6 +119,26 @@ func TestGetTasksHandler_FailedToRetrieveTasks(t *testing.T) {
 	assert.Equal(t, string(expectedBody), w.Body.String())
 }
 
+func TestUpdateTaskHandler_TaskNotFound(t *testing.T) {
+	name := "drink"
+	body := domain.UpdateTaskData{Name: &name}
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(body); err != nil {
+		t.Error(err)
+	}
+
+	r, tasksService := setupTasksTest(t)
+	tasksService.On("GetById", mock.Anything, taskId).Return(domain.Task{}, gorm.ErrRecordNotFound)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PATCH", fmt.Sprintf("/tasks/%v", taskId), &buf)
+	r.ServeHTTP(w, req)
+
+	expectedBody, _ := json.Marshal(ErrTaskNotFound)
+	assert.Equal(t, ErrTaskNotFound.Status, w.Code)
+	assert.Equal(t, string(expectedBody), w.Body.String())
+}
+
 func setupTasksTest(t *testing.T) (*gin.Engine, *mocks.TasksService) {
 	gin.SetMode(gin.TestMode)
 
@@ -131,6 +154,8 @@ func setupTasksTest(t *testing.T) (*gin.Engine, *mocks.TasksService) {
 	})
 	r.GET("/tasks", h.handleGetTasks)
 	r.POST("/tasks", h.handleCreateTask)
+	r.PATCH("/tasks/:taskId", h.handleUpdateTask)
+	r.DELETE("/tasks/:taskId", h.handleDeleteTask)
 
 	return r, tasksService
 }

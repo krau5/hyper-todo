@@ -117,6 +117,27 @@ func TestGetByUser(t *testing.T) {
 	})
 }
 
+func TestUpdateById_InvalidId(t *testing.T) {
+	ctx := context.TODO()
+	name := "drink"
+
+	service, _, _ := setupTest(t)
+
+	mockData := domain.UpdateTaskData{Name: &name}
+	task, err := service.UpdateById(ctx, 0, mockData)
+
+	assert.Equal(t, domain.Task{}, task)
+	assert.EqualError(t, err, ErrInvalidId.Error())
+}
+
+func TestDeleteById_InvalidId(t *testing.T) {
+	ctx := context.TODO()
+	service, _, _ := setupTest(t)
+
+	err := service.DeleteById(ctx, 0)
+	assert.EqualError(t, err, ErrInvalidId.Error())
+}
+
 func setupTest(t *testing.T) (*Service, *mocks.TasksRepository, *userMocks.UsersRepository) {
 	tasksRepo := mocks.NewTasksRepository(t)
 	usersRepo := userMocks.NewUsersRepository(t)

@@ -62,8 +62,34 @@ func (r *tasksRepository) GetByUser(ctx context.Context, userId int64) ([]domain
 	return tasks, nil
 }
 
-func (r *tasksRepository) UpdateById(ctx context.Context, id int64, data *domain.Task) (domain.Task, error) {
-	return domain.Task{}, nil
+func (r *tasksRepository) UpdateById(ctx context.Context, id int64, data domain.UpdateTaskData) (domain.Task, error) {
+	taskModel := TaskModel{}
+
+	result := r.db.WithContext(ctx).First(&taskModel, id)
+	if result.Error != nil {
+		return domain.Task{}, result.Error
+	}
+
+	updates := make(map[string]interface{})
+	if data.Name != nil && len(*data.Name) != 0 {
+		updates["name"] = *data.Name
+	}
+	if data.Description != nil && len(*data.Description) != 0 {
+		updates["description"] = *data.Description
+	}
+	if data.Deadline != nil && !(*data.Deadline).IsZero() {
+		updates["deadline"] = *data.Deadline
+	}
+	if data.Completed != nil {
+		updates["completed"] = *data.Completed
+	}
+
+	result = r.db.WithContext(ctx).Model(&taskModel).Updates(updates)
+	if result.Error != nil {
+		return domain.Task{}, result.Error
+	}
+
+	return taskModel.Task, nil
 }
 
 func (r *tasksRepository) DeleteById(ctx context.Context, id int64) error {

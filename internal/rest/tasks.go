@@ -19,7 +19,7 @@ type TasksService interface {
 	Create(ctx context.Context, name, description string, deadline time.Time, userId int64) (domain.Task, error)
 	GetById(context.Context, int64) (domain.Task, error)
 	GetByUser(context.Context, int64) ([]domain.Task, error)
-	UpdateById(context.Context, int64, *domain.Task) (domain.Task, error)
+	UpdateById(context.Context, int64, domain.UpdateTaskData) (domain.Task, error)
 	DeleteById(context.Context, int64) error
 }
 
@@ -42,6 +42,7 @@ var (
 	ErrTaskNotFound          = appErrors.NewResponseError(http.StatusNotFound, "task was not found")
 	ErrFailedToDeleteTask    = appErrors.NewResponseError(http.StatusInternalServerError, "failed to delete task")
 	ErrFailedToRetrieveTasks = appErrors.NewResponseError(http.StatusInternalServerError, "failed to retrieve tasks")
+	ErrFailedToUpdateTask    = appErrors.NewResponseError(http.StatusInternalServerError, "failed to update task")
 )
 
 // NewTasksHandler registers the task handler with the Gin engine.
@@ -52,6 +53,7 @@ func NewTasksHandler(r *gin.Engine, tasksService TasksService) {
 
 	r.GET("/tasks", middleware.AuthMiddleware, h.handleGetTasks)
 	r.POST("/tasks", middleware.AuthMiddleware, h.handleCreateTask)
+	r.PATCH("/tasks/:taskId", middleware.AuthMiddleware, h.handleUpdateTask)
 	r.DELETE("/tasks/:taskId", middleware.AuthMiddleware, h.handleDeleteTask)
 }
 
@@ -121,6 +123,56 @@ func (h *TasksHandler) handleCreateTask(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, task)
+}
+
+// handleUpdateTask updates a task by ID.
+// @Summary Update a task
+// @Description Update a task by ID for the authenticated user
+// @Tags tasks
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param taskId path int true "Task ID"
+// @Param body body domain.UpdateTaskData true "Task update data"
+// @Success 200 {object} domain.Task "Updated task"
+// @Failure 400 {object} appErrors.ResponseError "Invalid task ID or request body"
+// @Failure 404 {object} appErrors.ResponseError "Task not found"
+// @Failure 403 "Forbidden if the task does not belong to the user"
+// @Failure 500 {object} appErrors.ResponseError "Failed to update task"
+// @Router /tasks/{taskId} [patch]
+func (h *TasksHandler) handleUpdateTask(c *gin.Context) {
+	var data domain.UpdateTaskData
+
+	rawTaskId := c.Param("taskId")
+	taskId, err := strconv.ParseInt(rawTaskId, 10, 64)
+	if err != nil {
+		c.JSON(ErrInvalidTaskId.Status, ErrInvalidTaskId)
+		return
+	}
+
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(appErrors.ErrInvalidBody.Status, appErrors.ErrInvalidBody)
+		return
+	}
+
+	task, err := h.tasksService.GetById(c.Request.Context(), taskId)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(ErrTaskNotFound.Status, ErrTaskNotFound)
+		return
+	}
+
+	if task.UserId != c.GetInt64("user-id") {
+		c.Status(http.StatusForbidden)
+		return
+	}
+
+	task, err = h.tasksService.UpdateById(c.Request.Context(), taskId, data)
+	if err != nil {
+		c.JSON(ErrFailedToUpdateTask.Status, ErrFailedToUpdateTask)
+		return
+	}
+
+	c.JSON(http.StatusOK, task)
 }
 
 // handleDeleteTask deletes a task by ID.
