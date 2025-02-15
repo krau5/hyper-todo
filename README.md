@@ -1,5 +1,3 @@
-### hyper-todo
-
 A simple yet complete todo API written in Go, allowing users to register accounts and manage their own tasks. The project also provides Swagger documentation for easy API interaction.
 
 ### Getting started
