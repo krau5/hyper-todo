@@ -1,0 +1,22 @@
+services:
+  postgres:
+    extends:
+      file: docker-compose.dev.yml
+      service: postgres
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hyper-todo-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PORT}:${PORT}"
+
+volumes:
+  postgres_data:
