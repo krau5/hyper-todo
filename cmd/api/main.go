@@ -10,10 +10,9 @@ import (
 	_ "github.com/krau5/hyper-todo/docs"
 	"github.com/krau5/hyper-todo/internal/repository"
 	"github.com/krau5/hyper-todo/internal/rest"
+	"github.com/krau5/hyper-todo/internal/rest/middleware"
 	"github.com/krau5/hyper-todo/task"
 	"github.com/krau5/hyper-todo/user"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -21,39 +20,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-var (
-	httpRequestsTotal = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total number of HTTP requests",
-		},
-		[]string{"method", "endpoint", "status"},
-	)
-
-	httpRequestDuration = promauto.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "http_request_duration_seconds",
-			Help:    "Duration of HTTP requests in seconds",
-			Buckets: prometheus.DefBuckets,
-		},
-		[]string{"method", "endpoint", "status"},
-	)
-)
-
-func prometheusMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		start := time.Now()
-
-		c.Next()
-
-		duration := time.Since(start).Seconds()
-		status := c.Writer.Status()
-
-		httpRequestsTotal.WithLabelValues(c.Request.Method, c.FullPath(), string(status)).Inc()
-		httpRequestDuration.WithLabelValues(c.Request.Method, c.FullPath(), string(status)).Observe(duration)
-	}
-}
 
 // @title Hyper Todo API
 // @securityDefinitions.apikey ApiKeyAuth
@@ -107,7 +73,7 @@ func registerHandlers(r *gin.Engine, db *gorm.DB) {
 	tasksRepo := repository.NewTasksRepository(db)
 	tasksService := task.NewService(tasksRepo, usersRepo)
 
-	r.Use(prometheusMiddleware())
+	r.Use(middleware.PrometheusMiddleware())
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	rest.NewPingHandler(r)
