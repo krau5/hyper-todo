@@ -10,8 +10,10 @@ import (
 	_ "github.com/krau5/hyper-todo/docs"
 	"github.com/krau5/hyper-todo/internal/repository"
 	"github.com/krau5/hyper-todo/internal/rest"
+	"github.com/krau5/hyper-todo/internal/rest/middleware"
 	"github.com/krau5/hyper-todo/task"
 	"github.com/krau5/hyper-todo/user"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -70,6 +72,9 @@ func registerHandlers(r *gin.Engine, db *gorm.DB) {
 
 	tasksRepo := repository.NewTasksRepository(db)
 	tasksService := task.NewService(tasksRepo, usersRepo)
+
+	r.Use(middleware.PrometheusMiddleware())
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	rest.NewPingHandler(r)
 	rest.NewAuthHandler(r, usersService)
