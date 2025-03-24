@@ -43,7 +43,8 @@ func validateToken(c *gin.Context) (int64, *errors.ResponseError) {
 func AuthMiddleware(c *gin.Context) {
 	userId, err := validateToken(c)
 	if err != nil {
-		c.AbortWithError(err.Status, err)
+		c.JSON(err.Status, err)
+		c.Abort()
 		return
 	}
 
